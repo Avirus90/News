@@ -1,34 +1,31 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
+const API_URL = "https://YOUR-RENDER-URL.onrender.com/news";
 
-const app = express();
-app.use(cors());
-
-const PORT = process.env.PORT || 5000;
-const API_KEY = "pub_6558ea3c8f294ac0ad2f7f86205c852c";
-
-// Health check route
-app.get("/", (req, res) => {
-  res.send("🚀 OdiGyan Backend Running");
-});
-
-// News route
-app.get("/news", async (req, res) => {
+async function loadNews() {
   try {
-    const response = await fetch(
-      `https://newsdata.io/api/1/latest?apikey=${API_KEY}&country=in&language=en`
-    );
+    const res = await fetch(API_URL);
+    const data = await res.json();
 
-    const data = await response.json();
+    const container = document.getElementById("news");
+    container.innerHTML = "";
 
-    res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch news" });
+    data.results.slice(0, 10).forEach(item => {
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <h3>${item.title}</h3>
+        <p>${item.description || "No description"}</p>
+        <small>${item.pubDate}</small>
+        <br>
+        <a href="${item.link}" target="_blank">Read More</a>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    document.getElementById("news").innerText = "❌ Failed to load news";
   }
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+loadNews();
