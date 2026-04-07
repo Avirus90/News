@@ -1,31 +1,43 @@
-const API_URL = "https://YOUR-RENDER-URL.onrender.com/news";
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
 
-async function loadNews() {
+const app = express();
+app.use(cors());
+
+// ✅ Render ke liye dynamic port
+const PORT = process.env.PORT || 5000;
+
+// 🔑 Tumhara Newsdata API key
+const API_KEY = "pub_6558ea3c8f294ac0ad2f7f86205c852c";
+
+// 🏠 Home route (testing)
+app.get("/", (req, res) => {
+  res.send("🚀 OdiGyan Backend Running");
+});
+
+// 📰 News API route
+app.get("/news", async (req, res) => {
   try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
+    const url = `https://newsdata.io/api/1/latest?apikey=${API_KEY}&country=in&language=en`;
 
-    const container = document.getElementById("news");
-    container.innerHTML = "";
+    const response = await fetch(url);
+    const data = await response.json();
 
-    data.results.slice(0, 10).forEach(item => {
-      const div = document.createElement("div");
-      div.className = "card";
+    // ✅ Safe return
+    if (!data || !data.results) {
+      return res.json({ results: [] });
+    }
 
-      div.innerHTML = `
-        <h3>${item.title}</h3>
-        <p>${item.description || "No description"}</p>
-        <small>${item.pubDate}</small>
-        <br>
-        <a href="${item.link}" target="_blank">Read More</a>
-      `;
+    res.json(data);
 
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    document.getElementById("news").innerText = "❌ Failed to load news";
+  } catch (error) {
+    console.error("❌ Error fetching news:", error);
+    res.status(500).json({ error: "Failed to fetch news" });
   }
-}
+});
 
-loadNews();
+// 🚀 Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
